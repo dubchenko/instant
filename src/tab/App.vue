@@ -1,6 +1,8 @@
 <template>
   <div class="main theme-dark">
-    <div class="timer">
+    <div
+      v-if="major && minor"
+      class="timer">
       <div class="age">
         <span>age</span>
       </div>
@@ -9,13 +11,17 @@
         <span class="minor">.{{ minor }}</span>
       </div>
     </div>
+    <div v-if="noDateOfBirth">
+      <form @submit.prevent="setDateOfBirth">
+        <input type="date" v-model="dob">
+        <input
+          type="submit"
+          value="Send">
+      </form>
+    </div>
     <div class="footer">
-      instant
+      <span @click="clearStorage">instant</span>
     </div>
-    <!-- <div v-else>
-      :(
-    </div>
-    <button @clsick="clearStorage">Clear Storage</button> -->
   </div>
 </template>
 
@@ -26,48 +32,58 @@ export default {
       inited: false,
       major: null,
       minor: null,
-      testdate: null,
-      message: 'Hello World!',
-      age: new Date('1996/03/14')
+      noDateOfBirth: false,
+      dob: null
     }
   },
   mounted () {
     this.init()
-    // this.setDateOfBirth()
-    setInterval(() => {
-      this.test()
-    }, 100);
   },
   methods: {
-    setDateOfBirth () {   
-      const dob = this.age / 1000 | 0
+    setDateOfBirth () {
+      if (!this.dob) {
+        return
+      }
+
+      const dob = new Date(this.dob).getTime()
+
       chrome.storage.sync.set({ dob: dob }, () => {
-        console.log('Value is set', dob);
+        this.noDateOfBirth = false
+        this.init()
       })
     },
     init () {
       chrome.storage.sync.get(['dob'], (result) => {
-        if (result.dob) {
-          this.inited = true
-          this.test()
+        if (!result.dob) {
+          this.noDateOfBirth = true
           return
         }
+
+        this.dob = result.dob
+
+        this.startLoop()
       })
     },
-    test () {
-      const now = new Date()
-      const duration = now - this.age
-      // const years = duration / 31556900000
-      // 31536,000,000
-      const newYears = duration / 31557600000
-      
-      const majorMinor = newYears.toFixed(9).toString().split('.')
+    startLoop () {
+      this.loop()
+
+      setInterval(() => {
+        this.loop()
+      }, 100)
+    },
+    loop () {
+      const now = new Date().getTime()
+      const duration = now - this.dob
+
+      const years = duration / 31557600000
+
+      const majorMinor = years.toFixed(9).toString().split('.')
 
       this.major = majorMinor[0]
       this.minor = majorMinor[1]
     },
     clearStorage () {
-      chrome.storage.sync.clear();
+      chrome.storage.sync.clear()
     }
   }
 }
@@ -85,7 +101,7 @@ export default {
     box-sizing: border-box;
   }
 
-  html, 
+  html,
   body {
     -webkit-font-smoothing: antialiased;
     margin: 0;
@@ -129,7 +145,7 @@ export default {
           font-weight: 600;
           line-height: 1;
         }
-        
+
         .minor {
           margin-left: .25rem;
           opacity: .5;
