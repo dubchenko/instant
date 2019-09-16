@@ -1,26 +1,27 @@
 <template>
-  <div class="main theme-dark">
-    <div
-      v-if="major && minor"
-      class="timer">
-      <div class="age">
-        <span>age</span>
-      </div>
-      <div class="time">
-        <span class="major">{{ major }}</span>
-        <span class="minor">.{{ minor }}</span>
-      </div>
-    </div>
-    <div v-if="noDateOfBirth">
-      <form @submit.prevent="setDateOfBirth">
-        <input type="date" v-model="dob">
-        <input
-          type="submit"
-          value="Send">
-      </form>
+  <div class="container theme-dark">
+    <div class="main">
+      <template v-if="isReady">
+        <div class="sub">
+          <span>age</span>
+        </div>
+        <div class="loop">
+          <span class="ages">{{ time.age }}</span>
+          <span class="millisecond">.{{ time.millisecond }}</span>
+        </div>
+      </template>
+      <template v-if="noDateOfBirth">
+        <form @submit.prevent="setDateOfBirth">
+          <input type="date" v-model="dateOfBirth">
+          <input
+            type="submit"
+            value="Submit">
+        </form>
+      </template>
     </div>
     <div class="footer">
-      <span @click="clearStorage">instant</span>
+      <a href="https://github.com/dubchenko/instant">instant</a>
+      <span @click="clearStorage"></span>
     </div>
   </div>
 </template>
@@ -29,23 +30,26 @@
 export default {
   data () {
     return {
-      inited: false,
-      major: null,
-      minor: null,
+      time: {},
       noDateOfBirth: false,
-      dob: null
+      dateOfBirth: null
     }
   },
   mounted () {
     this.init()
   },
+  computed: {
+    isReady () {
+      return ('age' in this.time) && ('millisecond' in this.time)
+    }
+  },
   methods: {
     setDateOfBirth () {
-      if (!this.dob) {
+      if (!this.dateOfBirth) {
         return
       }
 
-      const dob = new Date(this.dob).getTime()
+      const dob = new Date(this.dateOfBirth).getTime()
 
       chrome.storage.sync.set({ dob: dob }, () => {
         this.noDateOfBirth = false
@@ -59,7 +63,7 @@ export default {
           return
         }
 
-        this.dob = result.dob
+        this.dateOfBirth = result.dob
 
         this.startLoop()
       })
@@ -73,14 +77,16 @@ export default {
     },
     loop () {
       const now = new Date().getTime()
-      const duration = now - this.dob
+      const difference = now - this.dateOfBirth
 
-      const years = duration / 31557600000
+      const fullYears = difference / 31557600000
 
-      const majorMinor = years.toFixed(9).toString().split('.')
+      const fullYearsAndMillisecond = fullYears.toFixed(9).toString().split('.')
 
-      this.major = majorMinor[0]
-      this.minor = majorMinor[1]
+      this.time = {
+        age: fullYearsAndMillisecond[0],
+        millisecond: fullYearsAndMillisecond[1]
+      }
     },
     clearStorage () {
       chrome.storage.sync.clear()
@@ -110,43 +116,69 @@ export default {
     font-family: 'Avenir';
   }
 
-  .main {
+  .container {
     height: 100%;
     display: flex;
     align-items: center;
     flex-direction: column;
 
     &.theme-dark {
-      background: #2F3640;
-      color: #F1F2F2;
+      background: #1A1A1A;
+      color: #F5F5F5;
+
+      a {
+        color: #F5F5F5;
+      }
+
+      input[type="date"] {
+        color: #F5F5F5;
+      }
+
+      input[type="submit"] {
+        color: #1A1A1A;
+        background: #F5F5F5;
+      }
     }
 
     &.theme-light {
-      background: #F1F2F2;
-      color: #2F3640;
+      background: #F5F5F5;
+      color: #1A1A1A;
+
+      a {
+        color: #1A1A1A;
+      }
+
+      input[type="date"] {
+        color: #1A1A1A;
+      }
+
+      input[type="submit"] {
+        color: #F5F5F5;
+        background: #1A1A1A;
+      }
     }
 
-    .timer {
+    .main {
       display: flex;
-      flex: 10;
+      flex: 12;
       justify-content: center;
       flex-direction: column;
 
-      .age {
+      .sub {
         margin-left: .25rem;
         opacity: .5;
       }
 
-      .time {
+      .loop {
         display: flex;
 
-        .major {
+        .ages {
           font-size: 6rem;
           font-weight: 600;
           line-height: 1;
         }
 
-        .minor {
+        .millisecond {
           margin-left: .25rem;
           opacity: .5;
           font-size: 3rem;
@@ -155,8 +187,47 @@ export default {
       }
     }
 
+    form {
+      display: flex;
+      flex-direction: column;
+
+      input[type="date"]::-webkit-inner-spin-button {
+        display: none;
+      }
+
+      input[type="date"] {
+        font-size: 2rem;
+        border: 0;
+        background: transparent;
+      }
+
+      input[type="submit"] {
+        cursor: pointer;
+        margin-top: 1rem;
+        opacity: .9;
+        border: 0;
+        font-weight: 600;
+        padding: .5rem;
+        font-size: 1rem;
+        border-radius: .25rem;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+
     .footer {
       flex: 1;
+
+      a {
+        text-decoration: none;
+        opacity: .5;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
     }
   }
 
