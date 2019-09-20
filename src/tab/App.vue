@@ -1,5 +1,7 @@
 <template>
-  <div class="container theme-dark">
+  <div 
+    class="container"
+    :class="[ theme ]">
     <div class="main">
       <template v-if="isReady">
         <div class="sub">
@@ -30,6 +32,7 @@
 export default {
   data () {
     return {
+      theme: 'theme-light',
       time: {},
       noDateOfBirth: false,
       dateOfBirth: null
@@ -37,6 +40,7 @@ export default {
   },
   mounted () {
     this.init()
+    this.initTheme()
   },
   computed: {
     isReady () {
@@ -68,6 +72,15 @@ export default {
         this.startLoop()
       })
     },
+    initTheme () {
+      chrome.storage.sync.get(['theme'], (result) => {        
+        if (!result.theme) {
+          return
+        }
+
+        this.theme = result.theme
+      })
+    },
     startLoop () {
       this.loop()
 
@@ -96,7 +109,6 @@ export default {
 </script>
 
 <style lang="scss">
-
   *,
   *:before,
   *:after {
