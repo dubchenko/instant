@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="main">
-      <input 
+      <input
         v-model="useDarkTheme"
         type="checkbox" />
       <p>Use dark theme</p>
@@ -39,7 +39,7 @@ export default {
     setTheme (theme) {
       chrome.storage.sync.set({ theme: theme }, () => {})
     }
-  },
+  }
 }
 </script>
 

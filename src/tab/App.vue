@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <div
     class="container"
     :class="[ theme ]">
     <div class="main">
@@ -73,7 +73,7 @@ export default {
       })
     },
     initTheme () {
-      chrome.storage.sync.get(['theme'], (result) => {        
+      chrome.storage.sync.get(['theme'], (result) => {
         if (!result.theme) {
           return
         }
